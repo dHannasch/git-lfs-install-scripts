@@ -20,7 +20,7 @@ gpg_check ()
     echo "Detected gpg..."
   else
     echo "Installing gnupg for GPG verification..."
-    apt-get install -y gnupg
+    sudo apt-get install -y gnupg
     if [ "$?" -ne "0" ]; then
       echo "Unable to install GPG! Your base system has a problem; please check your default OS's package repositories because GPG should work."
       echo "Repository installation aborted."
@@ -36,7 +36,7 @@ curl_check ()
     echo "Detected curl..."
   else
     echo "Installing curl..."
-    apt-get install -q -y curl
+    sudo apt-get install -q -y curl
     if [ "$?" -ne "0" ]; then
       echo "Unable to install curl! Your base system has a problem; please check your default OS's package repositories because curl should work."
       echo "Repository installation aborted."
@@ -50,7 +50,7 @@ install_debian_keyring ()
   if [ "${os}" = "debian" ]; then
     echo "Installing debian-archive-keyring which is needed for installing "
     echo "apt-transport-https on many Debian systems."
-    apt-get install -y debian-archive-keyring &> /dev/null
+    sudo apt-get install -y debian-archive-keyring &> /dev/null
   fi
 }
 
@@ -114,7 +114,7 @@ main ()
   # Need to first run apt-get update so that apt-transport-https can be
   # installed
   echo -n "Running apt-get update... "
-  apt-get update &> /dev/null
+  sudo apt-get update &> /dev/null
   echo "done."
 
   # Install the debian-archive-keyring package on debian systems so that
@@ -122,7 +122,7 @@ main ()
   install_debian_keyring
 
   echo -n "Installing apt-transport-https... "
-  apt-get install -y apt-transport-https &> /dev/null
+  sudo apt-get install -y apt-transport-https &> /dev/null
   echo "done."
 
 
@@ -134,7 +134,7 @@ main ()
   echo -n "Installing $apt_source_path..."
 
   # create an apt config file for this repository
-  curl -sSf "${apt_config_url}" > $apt_source_path
+  curl -sSf "${apt_config_url}" | sudo tee $apt_source_path > /dev/null
   curl_exit_code=$?
 
   if [ "$curl_exit_code" = "22" ]; then
@@ -152,7 +152,7 @@ main ()
     echo "For example, to force Ubuntu Trusty: os=ubuntu dist=trusty ./script.sh"
     echo
     echo "If you are running a supported OS, please email support@packagecloud.io and report this."
-    [ -e $apt_source_path ] && rm $apt_source_path
+    [ -e $apt_source_path ] && sudo rm $apt_source_path
     exit 1
   elif [ "$curl_exit_code" = "35" -o "$curl_exit_code" = "60" ]; then
     echo "curl is unable to connect to packagecloud.io over TLS when running: "
@@ -163,7 +163,7 @@ main ()
     echo " 2.) An old version of libssl. Try upgrading libssl on your system to a more recent version"
     echo
     echo "Contact support@packagecloud.io with information about your system for help."
-    [ -e $apt_source_path ] && rm $apt_source_path
+    [ -e $apt_source_path ] && sudo rm $apt_source_path
     exit 1
   elif [ "$curl_exit_code" -gt "0" ]; then
     echo
@@ -171,7 +171,7 @@ main ()
     echo "    curl ${apt_config_url}"
     echo
     echo "Double check your curl installation and try again."
-    [ -e $apt_source_path ] && rm $apt_source_path
+    [ -e $apt_source_path ] && sudo rm $apt_source_path
     exit 1
   else
     echo "done."
@@ -179,12 +179,12 @@ main ()
 
   echo -n "Importing packagecloud gpg key... "
   # import the gpg key
-  curl -L "${gpg_key_url}" 2> /dev/null | apt-key add - &>/dev/null
+  curl -L "${gpg_key_url}" 2> /dev/null | sudo apt-key add - &>/dev/null
   echo "done."
 
   echo -n "Running apt-get update... "
   # update apt on this system
-  apt-get update &> /dev/null
+  sudo apt-get update &> /dev/null
   echo "done."
 
   echo
